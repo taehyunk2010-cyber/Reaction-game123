@@ -38,6 +38,18 @@
         .animate-spin-slow {
             animation: spin-slow 8s linear infinite;
         }
+
+        /* 시작 버튼 강조 스타일 */
+        .btn-primary {
+            background-color: #10b981 !important;
+            color: #020617 !important;
+            font-weight: 800 !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6) !important;
+        }
+        .btn-primary:hover {
+            background-color: #34d399 !important;
+            box-shadow: 0 0 30px rgba(52, 211, 153, 0.8) !important;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-slate-950">
@@ -105,15 +117,15 @@
         <div id="arenaBox" class="relative w-full h-[420px] sm:h-[480px] bg-slate-900 rounded-3xl border-2 border-slate-800 overflow-hidden shadow-2xl transition-all duration-300 flex items-center justify-center game-area">
             
             <!-- Overlay with Start Button -->
-            <div id="startOverlay" class="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+            <div id="startOverlay" class="absolute inset-0 z-20 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
                 <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/10">
                     <svg class="w-8 h-8 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
                 </div>
                 <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Ready to Test Your Speed?</h2>
-                <p id="overlayText" class="text-slate-400 text-sm max-w-md mb-6 leading-relaxed">
-                    Click the <strong class="text-emerald-400 font-semibold">Green Circle</strong> as quickly as possible. Avoid clicking red/orange distractor shapes or empty background space!
+                <p id="overlayText" class="text-slate-300 text-sm max-w-md mb-6 leading-relaxed">
+                    Click the <strong class="text-emerald-400 font-bold">Green Circle</strong> as quickly as possible. Avoid clicking red/orange distractor shapes or empty background space!
                 </p>
-                <button id="startBtn" type="button" class="px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-base rounded-2xl shadow-xl shadow-emerald-500/20 transform active:scale-95 transition-all cursor-pointer border border-emerald-300">
+                <button id="startBtn" type="button" class="btn-primary px-8 py-3.5 text-base rounded-2xl transform active:scale-95 transition-all cursor-pointer">
                     Start Game
                 </button>
             </div>
