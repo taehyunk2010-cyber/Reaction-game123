@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Precision Flash - Target Reaction Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        
+        .game-area {
+            background-size: 24px 24px;
+            background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+
+        .shake-effect {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- Header -->
+    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-lg shadow-emerald-500/20">
+                    <svg class="w-6 h-6 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-lg tracking-tight leading-none text-white">Precision Flash</h1>
+                    <p class="text-xs text-slate-400 font-medium mt-1">Reaction Speed & Precision Test</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="soundToggle" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors border border-slate-700" title="Toggle Sound">
+                    <svg id="soundIcon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Section -->
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-5 justify-center">
+        
+        <!-- Scoreboard -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 flex flex-col justify-between shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Level</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="levelDisplay" class="text-2xl sm:text-3xl font-extrabold text-emerald-400">1</span>
+                    <span class="text-xs text-slate-500 font-medium">Stage</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 flex flex-col justify-between shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Time Limit</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="timerDisplay" class="text-2xl sm:text-3xl font-extrabold text-white">10.00</span>
+                    <span class="text-xs text-slate-500 font-medium">sec</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 flex flex-col justify-between shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">High Score</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="highScoreDisplay" class="text-2xl sm:text-3xl font-extrabold text-amber-400">0</span>
+                    <span class="text-xs text-slate-500 font-medium">Lvl</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/90 rounded-2xl p-3.5 border border-slate-800 flex flex-col justify-between shadow-sm">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Size</span>
+                <div class="flex items-baseline gap-1 mt-1">
+                    <span id="targetSizeDisplay" class="text-2xl sm:text-3xl font-extrabold text-teal-400">50</span>
+                    <span class="text-xs text-slate-500 font-medium">px</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Arena -->
+        <div id="arenaBox" class="relative w-full h-[420px] sm:h-[480px] bg-slate-900 rounded-3xl border-2 border-slate-800 overflow-hidden shadow-2xl transition-all duration-300 flex items-center justify-center game-area">
+            
+            <!-- Overlay -->
+            <div id="startOverlay" class="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+                <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-4 shadow-lg shadow-emerald-500/10">
+                    <svg class="w-8 h-8 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>
+                </div>
+                <h2 id="overlayTitle" class="text-2xl sm:text-3xl font-extrabold text-white mb-2">Ready to Test Your Speed?</h2>
+                <p id="overlayText" class="text-slate-400 text-sm max-w-md mb-6 leading-relaxed">
+                    Click the <strong class="text-emerald-400 font-semibold">Green Circle</strong> as quickly as possible. Avoid clicking red/orange distractor shapes or empty background space!
+                </p>
+                <button id="startBtn" class="px-8 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-base rounded-2xl shadow-xl shadow-emerald-500/20 transform active:scale-95 transition-all cursor-pointer">
+                    Start Game
+                </button>
+            </div>
+
+            <div id="failFlash" class="absolute inset-0 bg-red-600/30 opacity-0 pointer-events-none transition-opacity duration-150 z-10"></div>
+
+            <div id="gamePlayArea" class="absolute inset-0 hidden"></div>
+            
+            <div id="gameHint" class="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-slate-950/70 border border-slate-800 backdrop-blur-md text-xs font-semibold text-slate-400 pointer-events-none z-10">
+                Wait for green target circle...
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-slate-900 bg-slate-950 p-4">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <div class="flex items-center gap-2">
+                <span>Rule: 10s initial limit. Drops by -0.01s & target shrinks each level hit!</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Target</span>
+                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Distractor</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Web Audio API
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        this.ctx = new AudioContextClass();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playSuccess() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+
+            playFail() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        let level = 1;
+        let baseTime = 10.00;
+        let timeRemaining = 10.00;
+        let timerInterval = null;
+        let gameState = 'IDLE'; 
+        let highScore = parseInt(localStorage.getItem('precision_reaction_highscore') || '0', 10);
+        let targetSpawnTimeout = null;
+
+        const levelDisplay = document.getElementById('levelDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const targetSizeDisplay = document.getElementById('targetSizeDisplay');
+        const arenaBox = document.getElementById('arenaBox');
+        const startOverlay = document.getElementById('startOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayText = document.getElementById('overlayText');
+        const gamePlayArea = document.getElementById('gamePlayArea');
+        const failFlash = document.getElementById('failFlash');
+        const startBtn = document.getElementById('startBtn');
+        const gameHint = document.getElementById('gameHint');
+        const soundToggle = document.getElementById('soundToggle');
+        const soundIcon = document.getElementById('soundIcon');
+
+        highScoreDisplay.textContent = highScore;
+
+        soundToggle.addEventListener('click', () => {
+            audio.enabled = !audio.enabled;
+            if (audio.enabled) {
+                soundIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`;
+                soundToggle.classList.remove('text-red-400');
+            } else {
+                soundIcon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
+                soundToggle.classList.add('text-red-400');
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            audio.init();
+            startGame();
+        });
+
+        function startGame() {
+            level = 1;
+            baseTime = 10.00;
+            updateStatsUI();
+            startOverlay.classList.add('hidden');
+            gamePlayArea.classList.remove('hidden');
+            prepareNextRound();
+        }
+
+        function updateStatsUI() {
+            levelDisplay.textContent = level;
+            highScoreDisplay.textContent = highScore;
+            const currentTargetSize = Math.max(18, 52 - (level - 1) * 1.5);
+            targetSizeDisplay.textContent = Math.round(currentTargetSize);
+        }
+
+        function prepareNextRound() {
+            gameState = 'WAITING';
+            clearPlayArea();
+            gameHint.textContent = 'Get ready... Target appearing soon!';
+            gameHint.className = "absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-slate-950/80 border border-slate-800 backdrop-blur-md text-xs font-semibold text-slate-400 pointer-events-none z-10";
+
+            const randomDelay = Math.floor(Math.random() * 1100) + 400;
+            
+            targetSpawnTimeout = setTimeout(() => {
+                if (gameState === 'WAITING') {
+                    spawnTargetAndDistractors();
+                }
+            }, randomDelay);
+        }
+
+        function clearPlayArea() {
+            gamePlayArea.innerHTML = '';
+            clearInterval(timerInterval);
+        }
+
+        function spawnTargetAndDistractors() {
+            gameState = 'ACTIVE';
+            gameHint.textContent = 'HIT THE GREEN CIRCLE!';
+            gameHint.className = "absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 backdrop-blur-md text-xs font-bold pointer-events-none z-10 animate-pulse";
+
+            const containerWidth = arenaBox.clientWidth || 300;
+            const containerHeight = arenaBox.clientHeight || 400;
+
+            const targetRadius = Math.max(10, 26 - (level - 1) * 0.75); 
+            const targetDiameter = targetRadius * 2;
+
+            const padding = 20;
+            const maxX = Math.max(10, containerWidth - targetDiameter - padding);
+            const maxY = Math.max(10, containerHeight - targetDiameter - padding);
+
+            const targetX = Math.floor(Math.random() * (maxX - padding)) + padding;
+            const targetY = Math.floor(Math.random() * (maxY - padding)) + padding;
+
+            const numDistractors = Math.min(12, Math.floor(level / 2) + 2);
+            for (let i = 0; i < numDistractors; i++) {
+                spawnDistractorShape(containerWidth, containerHeight, targetX, targetY, targetRadius);
+            }
+
+            const targetElem = document.createElement('div');
+            targetElem.style.width = `${targetDiameter}px`;
+            targetElem.style.height = `${targetDiameter}px`;
+            targetElem.style.left = `${targetX}px`;
+            targetElem.style.top = `${targetY}px`;
+            targetElem.className = `absolute rounded-full bg-gradient-to-tr from-emerald-500 to-green-400 border-2 border-emerald-200 shadow-lg shadow-emerald-500/50 cursor-pointer z-20 flex items-center justify-center transition-transform active:scale-90`;
+
+            const innerRing = document.createElement('div');
+            innerRing.className = 'w-1/2 h-1/2 rounded-full border border-white/60 bg-emerald-300/30';
+            targetElem.appendChild(innerRing);
+
+            targetElem.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                handleSuccessHit();
+            });
+
+            gamePlayArea.appendChild(targetElem);
+
+            timeRemaining = Math.max(0.5, baseTime - (level - 1) * 0.01);
+            timerDisplay.textContent = timeRemaining.toFixed(2);
+            
+            const startTime = performance.now();
+            const totalAllowed = timeRemaining * 1000;
+
+            timerInterval = setInterval(() => {
+                const elapsed = performance.now() - startTime;
+                const remaining = Math.max(0, (totalAllowed - elapsed) / 1000);
+                timerDisplay.textContent = remaining.toFixed(2);
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    triggerFail('TIME EXPIRED!');
+                }
+            }, 10);
+        }
+
+        function spawnDistractorShape(width, height, targetX, targetY, targetRadius) {
+            const shapeType = Math.floor(Math.random() * 4);
+            const distSize = Math.floor(Math.random() * 24) + 24;
+
+            let x, y;
+            let attempts = 0;
+            do {
+                x = Math.floor(Math.random() * Math.max(10, width - distSize - 30)) + 15;
+                y = Math.floor(Math.random() * Math.max(10, height - distSize - 30)) + 15;
+                attempts++;
+            } while (
+                Math.hypot((x + distSize/2) - (targetX + targetRadius), (y + distSize/2) - (targetY + targetRadius)) < (targetRadius + distSize/2 + 20)
+                && attempts < 15
+            );
+
+            const distElem = document.createElement('div');
+            distElem.style.width = `${distSize}px`;
+            distElem.style.height = `${distSize}px`;
+            distElem.style.left = `${x}px`;
+            distElem.style.top = `${y}px`;
+            distElem.className = 'absolute cursor-pointer z-10 transition-opacity hover:opacity-80';
+
+            const colors = ['bg-rose-500', 'bg-amber-500', 'bg-indigo-500', 'bg-purple-500', 'bg-orange-500'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            if (shapeType === 0) {
+                distElem.className += ` rounded-full ${randomColor} border border-white/20 opacity-80`;
+            } else if (shapeType === 1) {
+                distElem.className += ` rounded-lg ${randomColor} border border-white/20 rotate-12 opacity-80`;
+            } else if (shapeType === 2) {
+                distElem.className += ` ${randomColor} border border-white/20 rotate-45 rounded-sm opacity-80`;
+            } else {
+                distElem.className += ` rounded-md ${randomColor} border border-white/30 rotate-12 opacity-80`;
+            }
+
+            distElem.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                triggerFail('WRONG SHAPE CLICKED!');
+            });
+
+            gamePlayArea.appendChild(distElem);
+        }
+
+        gamePlayArea.addEventListener('pointerdown', (e) => {
+            if (gameState === 'ACTIVE') {
+                triggerFail('MISSED TARGET!');
+            }
+        });
+
+        function handleSuccessHit() {
+            if (gameState !== 'ACTIVE') return;
+            clearInterval(timerInterval);
+            audio.playSuccess();
+
+            level++;
+            if (level - 1 > highScore) {
+                highScore = level - 1;
+                localStorage.setItem('precision_reaction_highscore', highScore.toString());
+            }
+
+            updateStatsUI();
+            prepareNextRound();
+        }
+
+        function triggerFail(reasonMessage = 'FAILED!') {
+            if (gameState === 'GAMEOVER') return;
+            gameState = 'GAMEOVER';
+            clearInterval(timerInterval);
+            clearTimeout(targetSpawnTimeout);
+            audio.playFail();
+
+            failFlash.style.opacity = '1';
+            arenaBox.classList.add('shake-effect');
+            setTimeout(() => {
+                failFlash.style.opacity = '0';
+                arenaBox.classList.remove('shake-effect');
+            }, 300);
+
+            const finalReachedStage = Math.max(1, level);
+            overlayTitle.textContent = reasonMessage;
+            overlayText.innerHTML = `Game Over! Reached Stage <strong class="text-emerald-400">${finalReachedStage}</strong>.<br/>Best Level Saved: <strong class="text-amber-400">${highScore}</strong>`;
+            startBtn.textContent = 'Try Again';
+            
+            setTimeout(() => {
+                gamePlayArea.classList.add('hidden');
+                startOverlay.classList.remove('hidden');
+            }, 400);
+        }
+    </script>
+</body>
+</html>
